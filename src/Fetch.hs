@@ -1,9 +1,7 @@
 module Fetch where
 
 import qualified Data.ByteString.Lazy as LB
-import           Network.HTTP.Client  (Manager (..), Request (..), closeManager,
-                                       httpLbs, newManager, parseUrl,
-                                       responseBody)
+import           Network.HTTP.Client  (httpLbs, responseBody)
 
 import           Monad
 import           State

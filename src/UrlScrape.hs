@@ -3,7 +3,6 @@
 {-# LANGUAGE TemplateHaskell   #-}
 module UrlScrape where
 
-import qualified Data.ByteString            as SB
 import           Data.ByteString.Lazy       (ByteString)
 import qualified Data.ByteString.Lazy       as LB
 import qualified Data.ByteString.Lazy.Char8 as LBC

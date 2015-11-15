@@ -3,34 +3,9 @@
 {-# LANGUAGE TemplateHaskell   #-}
 module Main where
 
-import           TH
-
-import           Control.Monad                (forM_, forever, when)
-import           Control.Monad.Reader         (ReaderT, ask, runReaderT)
-import           Control.Monad.State          (StateT, evalStateT, get, modify,
-                                               runStateT)
-import qualified Data.ByteString              as SB
-import           Data.ByteString.Lazy         (ByteString, isPrefixOf)
-import qualified Data.ByteString.Lazy         as BS
-import qualified Data.ByteString.Lazy.Char8   as BSLC
-import           Network.HTTP.Client          (Manager (..), Request (..),
-                                               closeManager, httpLbs,
-                                               newManager, parseUrl,
-                                               responseBody)
-import           Network.HTTP.Client.Internal (setUriRelative)
-import           Network.HTTP.Client.TLS      (tlsManagerSettings)
-import           Network.URI                  (parseURIReference)
-import           Pipes
-import           Pipes.Lift                   (evalStateP, runReaderP)
-import           Pipes.Prelude                (tee)
-import           Text.Email.Validate          (isValid)
-import           Text.Regex.Posix             (getAllTextMatches, (=~))
-
 import           Fetch
 import           MailScrape
-import           Monad
 import           State
-import           StateMod
 import           Store
 import           Types
 import           UrlScrape
