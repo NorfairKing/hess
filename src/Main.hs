@@ -10,13 +10,17 @@ import           Store
 import           Types
 import           UrlScrape
 
+import qualified Data.Dequeue as D
+import qualified Data.Set     as S
+
 spider :: String -> IO ()
 spider url = do
     req <- liftIO $ parseUrl url
     man <- newManager tlsManagerSettings
     let initState = State {
-              queue = pushFront empty req
+              queue = pushFront D.empty req
             , manager = man
+            , visited = S.empty
         }
     evalStateT (runEffect $ crawlProducer >-> getUrls >-> emailMatcher >-> validFilter >-> printer) initState
 

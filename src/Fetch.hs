@@ -1,19 +1,20 @@
 module Fetch where
 
-import qualified Data.ByteString.Lazy as LB
-import           Network.HTTP.Client  (httpLbs, responseBody)
+import           Data.ByteString.Lazy (ByteString)
 
 import           Monad
 import           State
+import           StateMod
 import           Types
 
-crawlProducer :: Producer (Request, LB.ByteString) Spider ()
+crawlProducer :: Producer (Request, ByteString) Spider ()
 crawlProducer = do
     mp <- gets (popFront . queue)
     case mp of
         Nothing -> return ()
         Just (req, newQueue) -> do
             modify (\s -> s { queue = newQueue })
+            markVisited req
             man <- gets manager
 
             body <- liftIO $ responseBody `fmap` httpLbs req man

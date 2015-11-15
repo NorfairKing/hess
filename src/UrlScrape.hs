@@ -27,6 +27,7 @@ getUrls = forever $ do
             Nothing -> return ()
             Just uri -> do
                 req <- liftIO $ setUriRelative r uri
-                addRequest req
+                b <- isVisited req
+                when (not b) $ addRequest req
     yield s
 
