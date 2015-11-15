@@ -15,7 +15,8 @@ import qualified Data.Set     as S
 
 spider :: String -> IO ()
 spider url = do
-    req <- liftIO $ parseUrl url
+    r <- liftIO $ parseUrl url
+    let req = r { checkStatus = \s rh cj -> Nothing } -- Don't ever throw errors
     man <- newManager tlsManagerSettings
     let initState = State {
               queue = pushFront D.empty req

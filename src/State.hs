@@ -4,6 +4,6 @@ import           Types
 
 data State = State {
           queue   :: BankersDequeue Request
-        , visited :: Set URI
+        , visited :: Set String
         , manager :: Manager
     }

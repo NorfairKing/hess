@@ -2,6 +2,8 @@ module Fetch where
 
 import           Data.ByteString.Lazy (ByteString)
 
+
+
 import           Monad
 import           State
 import           StateMod
@@ -17,7 +19,13 @@ crawlProducer = do
             markVisited req
             man <- gets manager
 
-            body <- liftIO $ responseBody `fmap` httpLbs req man
-            yield (req, body)
+
+            resp <- liftIO $ httpLbs req man
+            case statusCode $ responseStatus resp of
+                200 -> do
+                    let body = responseBody resp
+                    yield (req, body)
+
+                _   -> return ()
 
             crawlProducer

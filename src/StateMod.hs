@@ -17,18 +17,15 @@ addRequest req = do
 markVisited :: Request -> Proxy a' a b' b Spider ()
 markVisited req = do
     s <- gets visited
-    let muri = parseURI $ getUri req
-    case muri of
-        Nothing -> return ()
-        Just uri -> modify (\state -> state { visited = insert uri s })
+    let uri = getUri req
+    liftIO $ appendFile "/tmp/url.txt" $ (++ "\n") $ getUri req
+    modify (\state -> state { visited = insert uri s })
 
 isVisited :: Request -> Pipe a b Spider Bool
 isVisited req = do
     s <- gets visited
-    let muri = parseURI $ getUri req
-    return $ case muri of
-        Nothing -> True
-        Just uri -> member uri s
+    let uri = getUri req
+    return $ member uri s
 
 getUri :: Request -> String
 getUri req = SBC.unpack $ SB.concat [prot, host req, path req]

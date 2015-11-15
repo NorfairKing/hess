@@ -1,17 +1,18 @@
 module Types (
           module Types
-        , module Network.HTTP.Client
+        , module Control.Monad
+        , module Control.Monad.Reader
+        , module Control.Monad.State
         , module Data.Dequeue
+        , module Data.Set
+        , module Network.HTTP.Client
+        , module Network.HTTP.Client.Internal
+        , module Network.HTTP.Client.TLS
+        , module Network.HTTP.Types.Status
         , module Network.URI
         , module Pipes
-        , module Control.Monad.State
-        , module Control.Monad.Reader
-        , module Control.Monad
-        , module Text.Regex.Posix
         , module Text.Email.Validate
-        , module Network.HTTP.Client.Internal
-        , module Data.Set
-        , module Network.HTTP.Client.TLS
+        , module Text.Regex.Posix
     ) where
 
 import           Control.Monad                (forM_, forever, when)
@@ -23,9 +24,10 @@ import           Data.Dequeue                 (BankersDequeue (..),
 import           Data.Set                     (Set (..), insert, member)
 import           Network.HTTP.Client          (Manager (..), Request (..),
                                                httpLbs, newManager, parseUrl,
-                                               responseBody)
+                                               responseBody, responseStatus)
 import           Network.HTTP.Client.Internal (setUriRelative)
 import           Network.HTTP.Client.TLS      (tlsManagerSettings)
+import           Network.HTTP.Types.Status    (statusCode)
 import           Network.URI                  (URI (..), parseURI,
                                                parseURIReference)
 import           Pipes                        (Consumer (..), Pipe (..),
