@@ -10,8 +10,9 @@ import           Store
 import           Types
 import           UrlScrape
 
-import qualified Data.Dequeue as D
-import qualified Data.Set     as S
+import qualified Data.Set           as S
+
+import           System.Environment (getArgs)
 
 spider :: String -> IO ()
 spider url = do
@@ -19,12 +20,14 @@ spider url = do
     let req = r { checkStatus = \s rh cj -> Nothing } -- Don't ever throw errors
     man <- newManager tlsManagerSettings
     let initState = State {
-              queue = pushFront D.empty req
+              queue = S.singleton req
             , manager = man
             , visited = S.empty
         }
     evalStateT (runEffect $ crawlProducer >-> getUrls >-> emailMatcher >-> validFilter >-> printer) initState
 
 main :: IO ()
-main = spider "http://www.gnu.org/software/mailman/mailman-admin/node4.html"
+main = do
+    args <- getArgs
+    spider $ unwords args
 

@@ -11,11 +11,10 @@ import           Types
 
 crawlProducer :: Producer (Request, ByteString) Spider ()
 crawlProducer = do
-    mp <- gets (popFront . queue)
+    mp <- getNext
     case mp of
         Nothing -> return ()
-        Just (req, newQueue) -> do
-            modify (\s -> s { queue = newQueue })
+        Just req -> do
             markVisited req
             man <- gets manager
 
