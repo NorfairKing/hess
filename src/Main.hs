@@ -41,7 +41,7 @@ spider uri = do
 
     runEffect $ yield uri >-> toOutput uriOut -- Start the process off
 
-    as <- forM [1..5] $ \i ->
+    as <- forM [1] $ \i ->
         async $ void
             $ (flip evalStateT) startState
                 $ do runEffect $ fromInput uriIn >-> fetcher >-> toOutput contentOut
