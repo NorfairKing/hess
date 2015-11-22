@@ -47,8 +47,9 @@ import           Data.Set                     (Set (..), deleteFindMin, insert,
                                                member, toList)
 import           Network.HTTP.Client          (HttpException (..), Manager (..),
                                                Request (..), Response (..),
-                                               httpLbs, newManager, parseUrl,
-                                               responseBody, responseStatus)
+                                               httpLbs, httpNoBody, newManager,
+                                               parseUrl, responseBody,
+                                               responseStatus)
 import           Network.HTTP.Client.Internal (setUriRelative)
 import           Network.HTTP.Client.TLS      (tlsManagerSettings)
 import           Network.HTTP.Types.Header    (hContentType)
