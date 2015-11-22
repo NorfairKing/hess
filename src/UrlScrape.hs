@@ -9,8 +9,6 @@ import qualified Data.ByteString.Lazy.Char8 as LBC
 
 import           Control.Exception          as X
 
-import           Monad
-import           StateMod
 import           Store
 import           TH
 import           Types
@@ -20,7 +18,7 @@ urlPattern :: ByteString
 urlPattern = LB.init [litFile|src/urlPattern.txt|]
 
 uriScraper :: Pipe (URI, ByteString) URI IO ()
-uriScraper = uriMatcher >-> uriParser -- >-> tee uriPrinter
+uriScraper = uriMatcher >-> uriParser >-> uriCleaner -- >-> tee uriPrinter
 
 uriMatcher :: Pipe (URI, ByteString) (URI, String) IO ()
 uriMatcher = forever $ do
@@ -47,3 +45,7 @@ tryAbsolute s = parseAbsoluteURI s
 tryAbsoluteWithScheme :: String -> String -> Maybe URI
 tryAbsoluteWithScheme scheme s = parseAbsoluteURI $ scheme ++ "://" ++ s
 
+uriCleaner :: Pipe URI URI IO ()
+uriCleaner = forever $ do
+    uri <- await
+    yield $ uri { uriQuery = [], uriFragment = [] }

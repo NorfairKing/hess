@@ -6,7 +6,6 @@ module Main where
 import           Fetch
 import           MailScrape
 import           Parser
-import           State
 import           Store
 import           Types
 import           UrlScrape

@@ -4,7 +4,6 @@ module Store where
 import           Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as LB
 
-import           Monad
 import           Types
 
 

@@ -9,7 +9,6 @@ import qualified Data.ByteString.Lazy as LB
 
 
 import qualified Data.Set             as S
-import           Monad
 import           TH
 import           Types
 
