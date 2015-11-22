@@ -2,10 +2,12 @@ module State where
 
 import           Types
 
-data State = State {
+type State = TVar IState
+
+data IState = IState {
           _queue   :: Set Request
         , _visited :: Set String
         , _manager :: Manager
     }
 
-makeLenses ''State
+makeLenses ''IState

@@ -12,13 +12,20 @@ import           StateMod
 import           Types
 
 crawlProducer :: Producer (Request, ByteString) Spider ()
-crawlProducer = do
+crawlProducer = crawlProducer' 0
+
+crawlProducer' :: Int -> Producer (Request, ByteString) Spider ()
+crawlProducer' tries = do
     mp <- getNext
     case mp of
-        Nothing -> return ()
+        Nothing -> if tries < 10 -- TODO config-ify
+                   then do
+                        liftIO $ threadDelay 1000000 -- TODO config-ify
+                        crawlProducer' $ tries + 1
+                   else return ()
         Just req -> do
             markVisited req
-            man <- use manager
+            man <- readStates _manager
 
 
             mr <- liftIO $ (Just <$> httpLbs req man) `X.catch` statusExceptionHandler
@@ -38,7 +45,7 @@ crawlProducer = do
 
                         _   -> return ()
 
-            crawlProducer
+            crawlProducer' 0
 
 
 statusExceptionHandler :: HttpException -> IO (Maybe (Response ByteString))

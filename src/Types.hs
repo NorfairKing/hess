@@ -1,6 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Types (
           module Types
+        , module Control.Concurrent
+        , module Control.Concurrent.Async
+        , module Control.Concurrent.STM
         , module Control.Lens
         , module Control.Monad
         , module Control.Monad.Reader
@@ -15,14 +18,21 @@ module Types (
         , module Network.HTTP.Types.Status
         , module Network.URI
         , module Pipes
+        , module Pipes.Concurrent
         , module Text.Email.Validate
         , module Text.Regex.Posix
     ) where
 
+import           Control.Concurrent           (threadDelay)
+import           Control.Concurrent.Async     (async, wait)
+import           Control.Concurrent.STM       (TVar (..), atomically,
+                                               modifyTVar', newTVarIO, readTVar,
+                                               readTVar, writeTVar)
 import           Control.Lens                 (makeLenses, use, uses, view,
-                                               (%=), (.=), (^.))
-
-import           Control.Monad                (forM_, forever, unless, when)
+                                               (%=), (%~), (&), (.=), (.~),
+                                               (^.))
+import           Control.Monad                (forM, forM_, forever, unless,
+                                               void, when)
 import           Control.Monad.Reader         (ReaderT, ask, runReaderT)
 import           Control.Monad.State          (StateT, evalStateT, get, gets,
                                                modify)
@@ -47,6 +57,8 @@ import           Network.URI                  (URI (..), parseURI,
 import           Pipes                        (Consumer (..), Pipe (..),
                                                Producer (..), Proxy (..), await,
                                                liftIO, runEffect, yield, (>->))
+import           Pipes.Concurrent             (bounded, forkIO, fromInput,
+                                               performGC, spawn, toOutput)
 import           Text.Email.Validate          (isValid)
 import           Text.Regex.Posix             (getAllTextMatches, (=~))
 

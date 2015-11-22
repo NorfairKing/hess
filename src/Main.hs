@@ -18,12 +18,22 @@ spider url = do
     r <- liftIO $ parseUrl url
     let req = r { checkStatus = \s rh cj -> Nothing } -- Don't ever throw errors
     man <- newManager tlsManagerSettings
-    let initState = State {
+    let initState = IState {
               _queue = S.singleton req
             , _manager = man
             , _visited = S.empty
         }
-    evalStateT (runEffect $ crawlProducer >-> getUrls >-> emailMatcher >-> validFilter >-> printer) initState
+
+    tst <- newTVarIO initState
+
+    (output, input) <- spawn $ bounded 8
+    as <- forM [1..10] $ \i ->
+         async $ void $ (flip evalStateT) tst $ do runEffect $ crawlProducer >-> toOutput output
+                                                   liftIO performGC
+
+
+    a <- async $ void $ (flip evalStateT) tst $ runEffect $ fromInput input >-> getUrls >-> emailMatcher >-> validFilter >-> printer
+    mapM_ wait (a:as)
 
 main :: IO ()
 main = do
