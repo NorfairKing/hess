@@ -1,10 +1,15 @@
-module Parser (parseArgs, Args(..)) where
+module Parser where
+
+import           Types
 
 import           Options.Applicative
 
+
 data Args = Args {
-        arg_startingUrl :: String
+        _arg_startingUrl :: String
     } deriving (Show, Eq)
+
+makeLenses ''Args
 
 argParser :: Parser Args
 argParser = Args
@@ -19,3 +24,4 @@ parseArgs = execParser opts
       ( fullDesc
      <> progDesc "Web spider with the objective to find email addresses."
      <> header "HEAS: Haskell Email Address Spider" )
+

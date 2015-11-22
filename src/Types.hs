@@ -1,12 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Types (
           module Types
+        , module Control.Lens
         , module Control.Monad
         , module Control.Monad.Reader
         , module Control.Monad.State
         , module Data.Dequeue
-        , module Data.Set
         , module Data.List
+        , module Data.Set
         , module Network.HTTP.Client
         , module Network.HTTP.Client.Internal
         , module Network.HTTP.Client.TLS
@@ -16,6 +17,9 @@ module Types (
         , module Text.Email.Validate
         , module Text.Regex.Posix
     ) where
+
+import           Control.Lens                 (makeLenses, use, uses, view,
+                                               (%=), (.=), (^.))
 
 import           Control.Monad                (forM_, forever, unless, when)
 import           Control.Monad.Reader         (ReaderT, ask, runReaderT)

@@ -16,7 +16,7 @@ crawlProducer = do
         Nothing -> return ()
         Just req -> do
             markVisited req
-            man <- gets manager
+            man <- use manager
 
 
             resp <- liftIO $ httpLbs req man
