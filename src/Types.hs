@@ -11,6 +11,7 @@ module Types (
         , module Network.HTTP.Client
         , module Network.HTTP.Client.Internal
         , module Network.HTTP.Client.TLS
+        , module Network.HTTP.Types.Header
         , module Network.HTTP.Types.Status
         , module Network.URI
         , module Pipes
@@ -33,11 +34,13 @@ import           Data.List                    (find)
 import           Data.Ord                     (comparing)
 import           Data.Set                     (Set (..), deleteFindMin, insert,
                                                member, toList)
-import           Network.HTTP.Client          (Manager (..), Request (..),
+import           Network.HTTP.Client          (HttpException (..), Manager (..),
+                                               Request (..), Response (..),
                                                httpLbs, newManager, parseUrl,
                                                responseBody, responseStatus)
 import           Network.HTTP.Client.Internal (setUriRelative)
 import           Network.HTTP.Client.TLS      (tlsManagerSettings)
+import           Network.HTTP.Types.Header    (hContentType)
 import           Network.HTTP.Types.Status    (statusCode)
 import           Network.URI                  (URI (..), parseURI,
                                                parseURIReference)

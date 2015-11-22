@@ -7,6 +7,7 @@ import           Data.ByteString.Lazy       (ByteString)
 import qualified Data.ByteString.Lazy       as LB
 import qualified Data.ByteString.Lazy.Char8 as LBC
 
+import           Control.Exception          as X
 
 import           Monad
 import           StateMod
@@ -26,8 +27,15 @@ getUrls = forever $ do
         case muri of
             Nothing -> return ()
             Just uri -> do
-                req <- liftIO $ setUriRelative r uri
-                b <- isVisited req
-                when (not b) $ addRequest req
+                -- liftIO $ print $ uriPath uri
+                mr <- liftIO $ (Just <$> setUriRelative r uri) `X.catch` exceptionHandler
+                case mr of
+                    Nothing -> return ()
+                    Just req -> do
+                        b <- isVisited req
+                        when (not b) $ addRequest req
     yield s
+
+exceptionHandler :: HttpException -> IO (Maybe Request)
+exceptionHandler e = return Nothing
 
