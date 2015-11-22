@@ -11,32 +11,56 @@ import           Store
 import           Types
 import           UrlScrape
 
-import qualified Data.Set   as S
+import           Data.ByteString.Lazy (ByteString)
 
-spider :: String -> IO ()
-spider url = do
-    r <- liftIO $ parseUrl url
-    let req = r { checkStatus = \s rh cj -> Nothing } -- Don't ever throw errors
+import qualified Data.Set             as S
+
+-- We'll have to change fromInput and fromOutput to not just stop when they're done.
+spider :: URI -> IO ()
+spider uri = do
     man <- newManager tlsManagerSettings
-    let initState = IState {
-              _queue = S.singleton req
-            , _manager = man
-            , _visited = S.empty
+
+    let startVisited = S.empty
+    visitedSet <- newTVarIO startVisited
+
+    let startState = CState {
+              _manager = man
+            , _visited = visitedSet
         }
 
-    tst <- newTVarIO initState
+    (uriOut, uriIn) <- spawn unbounded
+    (contentOut, contentIn) <- spawn $ bounded 100 -- FIXME config-ify
+    (urlScraperOut, urlScraperIn) <- spawn $ bounded 100
+    (mailScraperOut, mailScraperIn) <- spawn $ bounded 100
 
-    (output, input) <- spawn $ bounded 8
-    as <- forM [1..10] $ \i ->
-         async $ void $ (flip evalStateT) tst $ do runEffect $ crawlProducer >-> toOutput output
-                                                   liftIO performGC
+    let duper :: Consumer (URI, ByteString) IO ()
+        duper = forever $ do
+            (uri, content) <- await
+            runEffect $ yield (uri, content) >-> toOutput urlScraperOut
+            runEffect $ yield content >-> toOutput mailScraperOut
 
+    runEffect $ yield uri >-> toOutput uriOut -- Start the process off
 
-    a <- async $ void $ (flip evalStateT) tst $ runEffect $ fromInput input >-> getUrls >-> emailMatcher >-> validFilter >-> printer
-    mapM_ wait (a:as)
+    as <- forM [1..8] $ \i ->
+        async $ void
+            $ (flip evalStateT) startState
+                $ do runEffect $ fromInput uriIn >-> fetcher >-> toOutput contentOut
+                     liftIO performGC
+
+    s <- async $ void $ do runEffect $ fromInput contentIn >-> duper
+                           performGC
+
+    u <- async $ void $ do runEffect $ fromInput urlScraperIn >-> uriScraper >-> toOutput uriOut
+                           performGC
+    m <- async $ void $ do runEffect $ fromInput mailScraperIn >-> mailScraper >-> validFilter >-> printer
+                           performGC
+
+    mapM_ wait (m:u:s:as)
 
 main :: IO ()
 main = do
     args <- parseArgs
-    spider $ args ^. arg_startingUrl
+    case parseURI $ args ^. arg_startingUrl of
+        Nothing -> error "Invalid seed URI"
+        Just uri -> spider uri
 

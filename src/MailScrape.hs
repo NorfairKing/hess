@@ -15,13 +15,13 @@ import           Types
 mailPattern :: ByteString
 mailPattern = LB.init [litFile|src/mailPattern.txt|]
 
-emailMatcher :: Pipe ByteString ByteString Spider ()
-emailMatcher = forever $ do
-    s <- await
-    let func = getAllTextMatches (s =~ mailPattern) :: [ByteString]
+mailScraper :: Pipe ByteString ByteString IO ()
+mailScraper = forever $ do
+    content <- await
+    let func = getAllTextMatches (content =~ mailPattern) :: [ByteString]
     mapM_ yield func
 
-validFilter :: Pipe ByteString ByteString Spider ()
+validFilter :: Pipe ByteString ByteString IO ()
 validFilter = forever $ do
     m <- await
     let bs = SB.concat . LB.toChunks $ m

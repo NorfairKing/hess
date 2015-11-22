@@ -11,31 +11,39 @@ import           Control.Exception          as X
 
 import           Monad
 import           StateMod
+import           Store
 import           TH
 import           Types
-
+import           Utils
 
 urlPattern :: ByteString
 urlPattern = LB.init [litFile|src/urlPattern.txt|]
 
-getUrls :: Pipe (Request, ByteString) ByteString Spider ()
-getUrls = forever $ do
-    (r, s) <- await
-    let ms = getAllTextMatches (s =~ urlPattern) :: [ByteString]
-    forM_ ms $ \u -> do
-        let muri = parseURIReference . LBC.unpack $ u
-        case muri of
-            Nothing -> return ()
-            Just uri -> do
-                -- liftIO $ print $ uriPath uri
-                mr <- liftIO $ (Just <$> setUriRelative r uri) `X.catch` exceptionHandler
-                case mr of
-                    Nothing -> return ()
-                    Just req -> do
-                        b <- isVisited req
-                        when (not b) $ addRequest req
-    yield s
+uriScraper :: Pipe (URI, ByteString) URI IO ()
+uriScraper = uriMatcher >-> uriParser -- >-> tee uriPrinter
 
-exceptionHandler :: HttpException -> IO (Maybe Request)
-exceptionHandler e = return Nothing
+uriMatcher :: Pipe (URI, ByteString) (URI, String) IO ()
+uriMatcher = forever $ do
+    (base, content) <- await
+    let ms = getAllTextMatches (content =~ urlPattern) :: [ByteString]
+    forM_ ms $ \ub -> yield (base, LBC.unpack ub)
+
+uriParser :: Pipe (URI, String) URI IO ()
+uriParser = forever $ do
+    (base, new) <- await
+    yieldMaybe $ tryRelative base new
+    yieldMaybe $ tryAbsolute new
+    yieldMaybe $ tryAbsoluteWithScheme "http" new
+    -- yieldMaybe $ tryAbsoluteWithScheme "https" new
+
+tryRelative :: URI -> String -> Maybe URI
+tryRelative uri s = do
+    rel <- parseRelativeReference s
+    return $ relativeTo uri rel
+
+tryAbsolute :: String -> Maybe URI
+tryAbsolute s = parseAbsoluteURI s
+
+tryAbsoluteWithScheme :: String -> String -> Maybe URI
+tryAbsoluteWithScheme scheme s = parseAbsoluteURI $ scheme ++ "://" ++ s
 

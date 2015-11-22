@@ -19,6 +19,7 @@ module Types (
         , module Network.URI
         , module Pipes
         , module Pipes.Concurrent
+        , module Pipes.Prelude
         , module Text.Email.Validate
         , module Text.Regex.Posix
     ) where
@@ -46,19 +47,24 @@ import           Data.Set                     (Set (..), deleteFindMin, insert,
                                                member, toList)
 import           Network.HTTP.Client          (HttpException (..), Manager (..),
                                                Request (..), Response (..),
-                                               httpLbs, newManager, parseUrl,
-                                               responseBody, responseStatus)
+                                               httpLbs, httpNoBody, newManager,
+                                               parseUrl, responseBody,
+                                               responseStatus)
 import           Network.HTTP.Client.Internal (setUriRelative)
 import           Network.HTTP.Client.TLS      (tlsManagerSettings)
 import           Network.HTTP.Types.Header    (hContentType)
 import           Network.HTTP.Types.Status    (statusCode)
-import           Network.URI                  (URI (..), parseURI,
-                                               parseURIReference)
+import           Network.URI                  (URI (..), nonStrictRelativeTo,
+                                               parseAbsoluteURI,
+                                               parseRelativeReference, parseURI,
+                                               parseURIReference, relativeTo)
 import           Pipes                        (Consumer (..), Pipe (..),
                                                Producer (..), Proxy (..), await,
                                                liftIO, runEffect, yield, (>->))
 import           Pipes.Concurrent             (bounded, forkIO, fromInput,
-                                               performGC, spawn, toOutput)
+                                               performGC, spawn, toOutput,
+                                               unbounded)
+import           Pipes.Prelude                (tee)
 import           Text.Email.Validate          (isValid)
 import           Text.Regex.Posix             (getAllTextMatches, (=~))
 

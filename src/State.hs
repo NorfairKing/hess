@@ -2,12 +2,9 @@ module State where
 
 import           Types
 
-type State = TVar IState
-
-data IState = IState {
-          _queue   :: Set Request
-        , _visited :: Set String
+data CrawlerState = CState {
+          _visited :: TVar (Set URI)
         , _manager :: Manager
     }
 
-makeLenses ''IState
+makeLenses ''CrawlerState

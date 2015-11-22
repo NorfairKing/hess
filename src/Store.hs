@@ -8,7 +8,7 @@ import           Monad
 import           Types
 
 
-printer :: Consumer ByteString Spider ()
+printer :: Consumer ByteString IO ()
 printer = forever $ do
     bs <- await
     liftIO $ LB.putStr bs

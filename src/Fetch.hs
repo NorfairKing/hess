@@ -8,45 +8,102 @@ import           Control.Exception    as X
 
 import           Monad
 import           State
-import           StateMod
 import           Types
+import           Utils
 
-crawlProducer :: Producer (Request, ByteString) Spider ()
-crawlProducer = crawlProducer' 0
-
-crawlProducer' :: Int -> Producer (Request, ByteString) Spider ()
-crawlProducer' tries = do
-    mp <- getNext
-    case mp of
-        Nothing -> if tries < 10 -- TODO config-ify
-                   then do
-                        liftIO $ threadDelay 1000000 -- TODO config-ify
-                        crawlProducer' $ tries + 1
-                   else return ()
-        Just req -> do
-            markVisited req
-            man <- readStates _manager
+fetcher :: Pipe URI (URI, ByteString) Spider ()
+fetcher = visitedFilter >-> tee visitedMarker >-> prefetcher >-> contentFetcher
 
 
-            mr <- liftIO $ (Just <$> httpLbs req man) `X.catch` statusExceptionHandler
-            case mr of
-                Nothing -> return ()
-                Just resp -> do
-                    case statusCode $ responseStatus resp of
-                        200 -> do
-                            case lookup hContentType $ responseHeaders resp of
-                                Nothing -> return () -- Just to be sure.
-                                Just str -> do
-                                    if "text/" `isPrefixOf` str
-                                    then do
-                                        let body = responseBody resp
-                                        yield (req, body)
-                                    else return ()
-
-                        _   -> return ()
-
-            crawlProducer' 0
+toRequest :: URI -> Maybe Request
+toRequest uri = parseUrl $ show uri
 
 
-statusExceptionHandler :: HttpException -> IO (Maybe (Response ByteString))
-statusExceptionHandler e = return Nothing
+
+isVisited :: URI -> Proxy a' a b' b Spider Bool
+isVisited uri = do
+    tvis <- use visited
+    visSet <- liftIO $ atomically $ readTVar tvis
+    return $ member uri visSet
+
+markVisited :: URI -> Proxy a' a b' b Spider ()
+markVisited uri = do
+    tvis <- use visited
+    liftIO $ atomically $ do
+        visSet <- readTVar tvis
+        let newSet = insert uri visSet
+        writeTVar tvis newSet
+
+visitedFilter :: Pipe URI URI Spider ()
+visitedFilter = forever $ do
+    uri <- await
+    visited <- isVisited uri
+    if visited
+    then return ()
+    else yield uri
+
+prefetcher :: Pipe URI URI Spider ()
+prefetcher = requestBuilder >-> prefetchRequester >-> statusCodeFilter >-> headerFilter >-> fstPicker
+
+visitedMarker :: Consumer URI Spider ()
+visitedMarker = forever $ do
+    uri <- await
+    liftIO $ appendFile "/tmp/url.txt" $ (++ "\n") $ show uri
+    markVisited uri
+
+requestBuilder :: Pipe URI (URI, Request) Spider ()
+requestBuilder = forever $ do
+    uri <- await
+    case toRequest uri of
+        Nothing -> return ()
+        Just req -> yield (uri, req)
+
+prefetchRequester :: Pipe (URI, Request) (URI, Response ()) Spider ()
+prefetchRequester = forever $ do
+    (uri, req) <- await
+    man <- use manager
+    mresp <- liftIO $ (Just <$> httpNoBody req man) `X.catch` statusExceptionHandler
+    case mresp of
+        Nothing -> return ()
+        Just resp -> yield (uri, resp)
+
+statusCodeFilter :: Pipe (URI, Response a) (URI, Response a) Spider ()
+statusCodeFilter = forever $ do
+    (uri, resp) <- await
+    case statusCode $ responseStatus resp of
+        200 -> yield (uri, resp)
+        _ -> return ()
+
+headerFilter :: Pipe (URI, Response a) (URI, Response a) Spider ()
+headerFilter = forever $ do
+    (uri, resp) <- await
+    case lookup hContentType $ responseHeaders resp of
+        Nothing -> return () -- play it safe
+        Just str -> do
+            if "text/" `isPrefixOf` str
+            then yield (uri, resp)
+            else return ()
+
+
+contentFetcher :: Pipe URI (URI, ByteString) Spider ()
+contentFetcher = requestBuilder >-> fetchRequester >-> statusCodeFilter >-> headerFilter >-> contentExtractor
+
+contentExtractor :: Pipe (URI, Response a) (URI, a) Spider ()
+contentExtractor = forever $ do
+    (uri, resp) <- await
+    yield (uri, responseBody resp)
+
+fetchRequester :: Pipe (URI, Request) (URI, Response ByteString) Spider ()
+fetchRequester = forever $ do
+    (uri, req) <- await
+    man <- use manager
+    mresp <- liftIO $ (Just <$> httpLbs req man) `X.catch` statusExceptionHandler
+    case mresp of
+        Nothing -> return ()
+        Just resp -> yield (uri, resp)
+
+
+
+
+statusExceptionHandler :: HttpException -> IO (Maybe (Response a))
+statusExceptionHandler e = return Nothing -- Ignore all errors
