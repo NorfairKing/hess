@@ -9,7 +9,6 @@ import qualified Data.ByteString.Lazy.Char8 as LBC
 
 import           Control.Exception          as X
 
-import           Store
 import           TH
 import           Types
 import           Utils
