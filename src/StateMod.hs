@@ -1,10 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module StateMod where
 
-import qualified Data.ByteString       as SB
-import qualified Data.ByteString.Char8 as SBC
-
-import qualified Data.Set              as S
+import qualified Data.Set as S
 
 import           Monad
 import           State

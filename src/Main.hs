@@ -5,6 +5,7 @@ module Main where
 
 import           Fetch
 import           MailScrape
+import           Parser
 import           State
 import           Store
 import           Types
@@ -28,6 +29,6 @@ spider url = do
 
 main :: IO ()
 main = do
-    args <- getArgs
-    spider $ unwords args
+    args <- parseArgs
+    spider $ arg_startingUrl args
 
