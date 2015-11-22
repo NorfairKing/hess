@@ -19,6 +19,7 @@ module Types (
         , module Network.URI
         , module Pipes
         , module Pipes.Concurrent
+        , module Pipes.Lift
         , module Pipes.Prelude
         , module Text.Email.Validate
         , module Text.Regex.Posix
@@ -64,6 +65,7 @@ import           Pipes                        (Consumer (..), Pipe (..),
 import           Pipes.Concurrent             (bounded, forkIO, fromInput,
                                                performGC, spawn, toOutput,
                                                unbounded)
+import           Pipes.Lift                   (evalStateP)
 import           Pipes.Prelude                (tee)
 import           Text.Email.Validate          (isValid)
 import           Text.Regex.Posix             (getAllTextMatches, (=~))

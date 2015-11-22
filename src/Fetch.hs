@@ -19,7 +19,6 @@ toRequest :: URI -> Maybe Request
 toRequest uri = parseUrl $ show uri
 
 
-
 isVisited :: URI -> Proxy a' a b' b Spider Bool
 isVisited uri = do
     tvis <- use visited

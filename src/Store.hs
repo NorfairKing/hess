@@ -8,6 +8,9 @@ import           Monad
 import           Types
 
 
+store :: Consumer ByteString IO ()
+store = printer
+
 printer :: Consumer ByteString IO ()
 printer = forever $ do
     bs <- await

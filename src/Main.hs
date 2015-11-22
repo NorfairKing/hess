@@ -41,6 +41,7 @@ spider uri = do
 
     runEffect $ yield uri >-> toOutput uriOut -- Start the process off
 
+    -- Todo make helper functions that help here.
     as <- forM [1..8] $ \i ->
         async $ void
             $ (flip evalStateT) startState
@@ -52,15 +53,15 @@ spider uri = do
 
     u <- async $ void $ do runEffect $ fromInput urlScraperIn >-> uriScraper >-> toOutput uriOut
                            performGC
-    m <- async $ void $ do runEffect $ fromInput mailScraperIn >-> mailScraper >-> validFilter >-> printer
+    m <- async $ void $ do runEffect $ fromInput mailScraperIn >-> mailScraper >-> store
                            performGC
 
     mapM_ wait (m:u:s:as)
 
 main :: IO ()
 main = do
-    args <- parseArgs
-    case parseURI $ args ^. arg_startingUrl of
+    (seed, args) <- parseArgs
+    case parseURI seed of
         Nothing -> error "Invalid seed URI"
         Just uri -> spider uri
 
