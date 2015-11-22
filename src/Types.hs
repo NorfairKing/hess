@@ -19,6 +19,7 @@ module Types (
         , module Network.URI
         , module Pipes
         , module Pipes.Concurrent
+        , module Pipes.Prelude
         , module Text.Email.Validate
         , module Text.Regex.Posix
     ) where
@@ -53,14 +54,16 @@ import           Network.HTTP.Client.TLS      (tlsManagerSettings)
 import           Network.HTTP.Types.Header    (hContentType)
 import           Network.HTTP.Types.Status    (statusCode)
 import           Network.URI                  (URI (..), nonStrictRelativeTo,
-                                               parseURI, parseURIReference,
-                                               relativeTo)
+                                               parseAbsoluteURI,
+                                               parseRelativeReference, parseURI,
+                                               parseURIReference, relativeTo)
 import           Pipes                        (Consumer (..), Pipe (..),
                                                Producer (..), Proxy (..), await,
                                                liftIO, runEffect, yield, (>->))
 import           Pipes.Concurrent             (bounded, forkIO, fromInput,
                                                performGC, spawn, toOutput,
                                                unbounded)
+import           Pipes.Prelude                (tee)
 import           Text.Email.Validate          (isValid)
 import           Text.Regex.Posix             (getAllTextMatches, (=~))
 

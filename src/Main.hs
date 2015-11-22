@@ -50,7 +50,7 @@ spider uri = do
     s <- async $ void $ do runEffect $ fromInput contentIn >-> duper
                            performGC
 
-    u <- async $ void $ do runEffect $ fromInput urlScraperIn >-> urlScraper >-> toOutput uriOut
+    u <- async $ void $ do runEffect $ fromInput urlScraperIn >-> uriScraper >-> toOutput uriOut
                            performGC
     m <- async $ void $ do runEffect $ fromInput mailScraperIn >-> mailScraper >-> validFilter >-> printer
                            performGC
