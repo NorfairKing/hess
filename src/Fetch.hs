@@ -11,23 +11,19 @@ import           State
 import           StateMod
 import           Types
 
-crawlProducer :: Producer (Request, ByteString) Spider ()
-crawlProducer = crawlProducer' 0
 
-crawlProducer' :: Int -> Producer (Request, ByteString) Spider ()
-crawlProducer' tries = do
-    mp <- getNext
-    case mp of
-        Nothing -> if tries < 10 -- TODO config-ify
-                   then do
-                        liftIO $ threadDelay 1000000 -- TODO config-ify
-                        crawlProducer' $ tries + 1
-                   else return ()
+fetcher :: Pipe URI (URI, ByteString) Spider ()
+fetcher = forever $ do
+    uri <- await
+    -- TODO check if already visited
+    -- TODO Mark visited
+    liftIO $ appendFile "/tmp/url.txt" $ (++ "\n") $ show uri
+    let mr = toRequest uri
+    case mr of
+        Nothing -> return () -- Was unable to build a request
         Just req -> do
-            markVisited req
-            man <- readStates _manager
-
-
+            man <- use manager
+            -- TODO first to head request to check content type, skip if not text.
             mr <- liftIO $ (Just <$> httpLbs req man) `X.catch` statusExceptionHandler
             case mr of
                 Nothing -> return ()
@@ -40,13 +36,14 @@ crawlProducer' tries = do
                                     if "text/" `isPrefixOf` str
                                     then do
                                         let body = responseBody resp
-                                        yield (req, body)
+                                        yield (uri, body)
                                     else return ()
-
                         _   -> return ()
 
-            crawlProducer' 0
 
+toRequest :: URI -> Maybe Request
+toRequest uri = parseUrl $ show uri
 
 statusExceptionHandler :: HttpException -> IO (Maybe (Response ByteString))
-statusExceptionHandler e = return Nothing
+statusExceptionHandler e = return Nothing -- Ignore all errors
+

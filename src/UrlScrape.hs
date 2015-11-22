@@ -18,6 +18,19 @@ import           Types
 urlPattern :: ByteString
 urlPattern = LB.init [litFile|src/urlPattern.txt|]
 
+urlScraper :: Pipe (URI, ByteString) URI IO ()
+urlScraper = forever $ do
+    (base, content) <- await
+    let ms = getAllTextMatches (content =~ urlPattern) :: [ByteString]
+    forM_ ms $ \ub -> do
+        let muri = parseURIReference $ LBC.unpack ub
+        case muri of
+            Nothing -> return () -- Not a valid URI
+            Just u  -> do
+                -- liftIO $ print $ uriPath uri
+                let nu = nonStrictRelativeTo u base
+                yield nu
+{-
 getUrls :: Pipe (Request, ByteString) ByteString Spider ()
 getUrls = forever $ do
     (r, s) <- await
@@ -35,7 +48,7 @@ getUrls = forever $ do
                         b <- isVisited req
                         when (not b) $ addRequest req
     yield s
-
+-}
 exceptionHandler :: HttpException -> IO (Maybe Request)
 exceptionHandler e = return Nothing
 

@@ -7,6 +7,8 @@ import           Monad
 import           State
 import           Types
 
+
+{-
 modState :: (IState -> IState) -> Proxy a' a b' b Spider ()
 modState f = do
     st <- get
@@ -72,3 +74,5 @@ inQueue req = do
 isVisited :: Request -> Pipe a b Spider Bool
 isVisited req = readStates $ member uri . _visited
   where uri = getUri req
+
+-}

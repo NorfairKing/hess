@@ -52,13 +52,14 @@ import           Network.HTTP.Client.Internal (setUriRelative)
 import           Network.HTTP.Client.TLS      (tlsManagerSettings)
 import           Network.HTTP.Types.Header    (hContentType)
 import           Network.HTTP.Types.Status    (statusCode)
-import           Network.URI                  (URI (..), parseURI,
-                                               parseURIReference)
+import           Network.URI                  (URI (..), nonStrictRelativeTo,
+                                               parseURI, parseURIReference)
 import           Pipes                        (Consumer (..), Pipe (..),
                                                Producer (..), Proxy (..), await,
                                                liftIO, runEffect, yield, (>->))
 import           Pipes.Concurrent             (bounded, forkIO, fromInput,
-                                               performGC, spawn, toOutput)
+                                               performGC, spawn, toOutput,
+                                               unbounded)
 import           Text.Email.Validate          (isValid)
 import           Text.Regex.Posix             (getAllTextMatches, (=~))
 

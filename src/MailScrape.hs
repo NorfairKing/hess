@@ -15,6 +15,12 @@ import           Types
 mailPattern :: ByteString
 mailPattern = LB.init [litFile|src/mailPattern.txt|]
 
+mailScraper :: Pipe (URI, ByteString) ByteString IO ()
+mailScraper = forever $ do
+    (_, content) <- await
+    let func = getAllTextMatches (content =~ mailPattern) :: [ByteString]
+    mapM_ yield func
+
 emailMatcher :: Pipe ByteString ByteString Spider ()
 emailMatcher = forever $ do
     s <- await
