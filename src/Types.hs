@@ -53,7 +53,8 @@ import           Network.HTTP.Client.TLS      (tlsManagerSettings)
 import           Network.HTTP.Types.Header    (hContentType)
 import           Network.HTTP.Types.Status    (statusCode)
 import           Network.URI                  (URI (..), nonStrictRelativeTo,
-                                               parseURI, parseURIReference)
+                                               parseURI, parseURIReference,
+                                               relativeTo)
 import           Pipes                        (Consumer (..), Pipe (..),
                                                Producer (..), Proxy (..), await,
                                                liftIO, runEffect, yield, (>->))

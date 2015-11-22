@@ -27,6 +27,7 @@ urlScraper = forever $ do
         case muri of
             Nothing -> return () -- Not a valid URI
             Just u  -> do
-                let nu = nonStrictRelativeTo u base
+                -- parseRelativeReference and parseAbsoluteURI seperately!
+                let nu = relativeTo u base
                 liftIO $ print nu
                 yield nu

@@ -35,9 +35,9 @@ spider uri = do
 
     let duper :: Consumer (URI, ByteString) IO ()
         duper = forever $ do
-            tup <- await
-            runEffect $ yield tup >-> toOutput urlScraperOut
-            runEffect $ yield tup >-> toOutput mailScraperOut
+            (uri, content) <- await
+            runEffect $ yield (uri, content) >-> toOutput urlScraperOut
+            runEffect $ yield content >-> toOutput mailScraperOut
 
     runEffect $ yield uri >-> toOutput uriOut -- Start the process off
 
@@ -52,7 +52,7 @@ spider uri = do
 
     u <- async $ void $ do runEffect $ fromInput urlScraperIn >-> urlScraper >-> toOutput uriOut
                            performGC
-    m <- async $ void $ do runEffect $ fromInput mailScraperIn >-> mailScraper >-> printer
+    m <- async $ void $ do runEffect $ fromInput mailScraperIn >-> mailScraper >-> validFilter >-> printer
                            performGC
 
     mapM_ wait (m:u:s:as)
