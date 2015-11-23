@@ -28,9 +28,9 @@ spider uri = do
         }
 
     (uriOut, uriIn) <- spawn unbounded
-    (contentOut, contentIn) <- spawn unbounded
-    (urlScraperOut, urlScraperIn) <- spawn unbounded
-    (mailScraperOut, mailScraperIn) <- spawn unbounded
+    (contentOut, contentIn) <- spawn $ bounded 100
+    (urlScraperOut, urlScraperIn) <- spawn $ bounded 100
+    (mailScraperOut, mailScraperIn) <- spawn $ bounded 100
 
     let duper :: Consumer (URI, ByteString) IO ()
         duper = forever $ do
@@ -40,8 +40,10 @@ spider uri = do
 
     runEffect $ yield uri >-> toOutput uriOut -- Start the process off
 
+    let n = 4
+
     -- Todo make helper functions that help here.
-    as <- forM [1..50] $ \i ->
+    as <- forM [1..n] $ \i ->
         async $ void
             $ (flip evalStateT) startState
                 $ do runEffect $ fromInput uriIn >-> fetcher i >-> toOutput contentOut
@@ -55,7 +57,7 @@ spider uri = do
     m <- async $ void $ do runEffect $ fromInput mailScraperIn >-> mailScraper >-> store
                            performGC
 
-    mapM_ wait (m:u:s:as)
+    mapM_ wait (m:s:u:as)
 
 main :: IO ()
 main = do
