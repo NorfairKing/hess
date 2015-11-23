@@ -28,9 +28,9 @@ spider uri = do
         }
 
     (uriOut, uriIn) <- spawn unbounded
-    (contentOut, contentIn) <- spawn $ bounded 100 -- FIXME config-ify
-    (urlScraperOut, urlScraperIn) <- spawn $ bounded 100
-    (mailScraperOut, mailScraperIn) <- spawn $ bounded 100
+    (contentOut, contentIn) <- spawn unbounded
+    (urlScraperOut, urlScraperIn) <- spawn unbounded
+    (mailScraperOut, mailScraperIn) <- spawn unbounded
 
     let duper :: Consumer (URI, ByteString) IO ()
         duper = forever $ do
@@ -44,7 +44,7 @@ spider uri = do
     as <- forM [1..8] $ \i ->
         async $ void
             $ (flip evalStateT) startState
-                $ do runEffect $ fromInput uriIn >-> fetcher >-> toOutput contentOut
+                $ do runEffect $ fromInput uriIn >-> fetcher i >-> toOutput contentOut
                      liftIO performGC
 
     s <- async $ void $ do runEffect $ fromInput contentIn >-> duper

@@ -1,12 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Fetch where
 
-import           Data.ByteString      (isPrefixOf)
-import qualified Data.ByteString      as SB (ByteString)
+import           Data.ByteString       (isPrefixOf)
+import qualified Data.ByteString       as SB (ByteString)
 
-import           Data.ByteString.Lazy (ByteString)
+import           Data.ByteString.Lazy  (ByteString)
+-- import           Data.Time.Clock       (getCurrentTime)
+import           Data.Time.Clock.POSIX (getPOSIXTime)
 
-import           Control.Exception    as X
+import           Control.Exception     as X
 
 import           Types
 import           Utils
@@ -19,8 +21,27 @@ type Fetcher = StateT CrawlerState IO
 
 makeLenses ''CrawlerState
 
-fetcher :: Pipe URI (URI, ByteString) Fetcher ()
-fetcher = visitedFilter >-> tee visitedMarker >-> prefetcher >-> contentFetcher
+fetcher :: Int -> Pipe URI (URI, ByteString) Fetcher ()
+fetcher nr = -- statusLight nr >->
+    visitedFilter >->
+    tee visitedMarker >->
+    prefetcher >->
+    contentFetcher
+
+statusLight :: Int -> Pipe URI URI Fetcher ()
+statusLight nr = go $ fromInteger 0
+  where
+    go prev = forever $ do
+        u <- await
+        now <- liftIO getPOSIXTime
+        if prev + 1 < now
+        then do
+            liftIO $ putStrLn $ "Worker " ++ show nr ++ " running."
+            yield u
+            go now
+        else do
+            yield u
+            go prev
 
 
 toRequest :: URI -> Maybe Request
