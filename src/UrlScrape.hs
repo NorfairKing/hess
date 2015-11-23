@@ -12,6 +12,8 @@ import           Text.HTML.TagSoup
 
 import           Control.Exception          as X
 
+import qualified Pipes.Prelude              as P (print)
+
 import           TH
 import           Types
 import           Utils
@@ -53,16 +55,16 @@ hrefFilter = forever $ do
 unpacker :: Pipe (URI, ByteString) (URI, String) IO ()
 unpacker = forever $ do
     (u, l) <- await
-    liftIO $ print l
     yield (u, LBC.unpack l)
 
 uriParser :: Pipe (URI, String) URI IO ()
 uriParser = forever $ do
     (base, new) <- await
-    yieldMaybe $ tryRelative base new
-    yieldMaybe $ tryAbsolute new
-    yieldMaybe $ tryAbsoluteWithScheme "http" new
-    -- yieldMaybe $ tryAbsoluteWithScheme "https" new
+    if isURI new
+    then yieldMaybe $ tryAbsolute new
+    else if isRelativeReference new
+        then yieldMaybe $ tryRelative base new
+        else yieldMaybe $ tryAbsoluteWithScheme "http" new
 
 tryRelative :: URI -> String -> Maybe URI
 tryRelative uri s = do
@@ -78,4 +80,5 @@ tryAbsoluteWithScheme scheme s = parseAbsoluteURI $ scheme ++ "://" ++ s
 uriCleaner :: Pipe URI URI IO ()
 uriCleaner = forever $ do
     uri <- await
-    yield $ uri { uriQuery = [], uriFragment = [] }
+    let clean = uri { uriQuery = [], uriFragment = [] }
+    yield clean
