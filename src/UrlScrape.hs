@@ -8,6 +8,8 @@ import           Data.ByteString.Lazy       (ByteString)
 import qualified Data.ByteString.Lazy       as LB
 import qualified Data.ByteString.Lazy.Char8 as LBC
 
+import           Text.HTML.TagSoup
+
 import           Control.Exception          as X
 
 import           TH
@@ -22,29 +24,37 @@ scriptPattern = init [litFile|src/scriptPattern.txt|]
 
 uriScraper :: Pipe (URI, ByteString) URI IO ()
 uriScraper =
-    -- contentCleaner >->
-    uriMatcher >->
+    parser >->
+    aFilter >->
+    hrefFilter >->
+    unpacker >->
     uriParser >->
     uriCleaner
 
-contentCleaner :: Pipe (URI, ByteString) (URI, ByteString) IO ()
-contentCleaner = forever $ do
+parser :: Pipe (URI, ByteString) (URI, Tag ByteString) IO ()
+parser = forever $ do
     (uri, content) <- await
-    clean uri content
-  where
-    clean uri content = do
-        let (b1, p1, a1) = content =~ scriptPattern :: (ByteString, ByteString, ByteString)
-        yield (uri, b1)
-        if LB.null a1
-        then return ()
-        else clean uri a1
+    forM_ (parseTags content) $ \t -> yield (uri, t)
 
+aFilter :: Pipe (URI, Tag ByteString) (URI, Attribute ByteString) IO ()
+aFilter = forever $ do
+    (u, t) <- await
+    case t of
+        TagOpen "a" atts -> forM_ atts $ \a -> yield (u, a)
+        _ -> return ()
 
-uriMatcher :: Pipe (URI, ByteString) (URI, String) IO ()
-uriMatcher = forever $ do
-    (base, content) <- await
-    let ms = getAllTextMatches (content =~ urlPattern) :: [ByteString]
-    forM_ ms $ \ub -> yield (base, LBC.unpack ub)
+hrefFilter :: Pipe (URI, Attribute ByteString) (URI, ByteString) IO ()
+hrefFilter = forever $ do
+    (u, a) <- await
+    case a of
+        ("href", link) -> yield (u, link)
+        _ -> return ()
+
+unpacker :: Pipe (URI, ByteString) (URI, String) IO ()
+unpacker = forever $ do
+    (u, l) <- await
+    liftIO $ print l
+    yield (u, LBC.unpack l)
 
 uriParser :: Pipe (URI, String) URI IO ()
 uriParser = forever $ do
