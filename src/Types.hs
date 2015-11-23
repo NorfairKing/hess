@@ -8,7 +8,6 @@ module Types (
         , module Control.Monad
         , module Control.Monad.Reader
         , module Control.Monad.State
-        , module Data.Dequeue
         , module Data.List
         , module Data.Set
         , module Network.HTTP.Client
@@ -22,7 +21,7 @@ module Types (
         , module Pipes.Lift
         , module Pipes.Prelude
         , module Text.Email.Validate
-        , module Text.Regex.Posix
+        , module Text.Regex.PCRE
     ) where
 
 import           Control.Concurrent           (threadDelay)
@@ -40,8 +39,6 @@ import           Control.Monad.State          (StateT, evalStateT, get, gets,
                                                modify)
 import qualified Data.ByteString              as SB
 import qualified Data.ByteString.Char8        as SBC
-import           Data.Dequeue                 (BankersDequeue (..),
-                                               Dequeue (..))
 import           Data.List                    (find)
 import           Data.Ord                     (comparing)
 import           Data.Set                     (Set (..), deleteFindMin, insert,
@@ -68,7 +65,7 @@ import           Pipes.Concurrent             (bounded, forkIO, fromInput,
 import           Pipes.Lift                   (evalStateP)
 import           Pipes.Prelude                (tee)
 import           Text.Email.Validate          (isValid)
-import           Text.Regex.Posix             (getAllTextMatches, (=~))
+import           Text.Regex.PCRE              (getAllTextMatches, (=~))
 
 instance Eq Request where
     e1 == e2 = getUri e1 == getUri e2

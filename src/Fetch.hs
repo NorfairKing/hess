@@ -22,7 +22,7 @@ type Fetcher = StateT CrawlerState IO
 makeLenses ''CrawlerState
 
 fetcher :: Int -> Pipe URI (URI, ByteString) Fetcher ()
-fetcher nr = -- statusLight nr >->
+fetcher nr = statusLight nr >->
     visitedFilter >->
     tee visitedMarker >->
     prefetcher >->
@@ -36,7 +36,7 @@ statusLight nr = go $ fromInteger 0
         now <- liftIO getPOSIXTime
         if prev + 1 < now
         then do
-            liftIO $ putStrLn $ "Worker " ++ show nr ++ " running."
+            liftIO $ appendFile "/tmp/worker.txt" $ show nr ++ "\n"
             yield u
             go now
         else do

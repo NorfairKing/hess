@@ -3,6 +3,7 @@
 {-# LANGUAGE TemplateHaskell   #-}
 module UrlScrape where
 
+import qualified Data.ByteString            as SB
 import           Data.ByteString.Lazy       (ByteString)
 import qualified Data.ByteString.Lazy       as LB
 import qualified Data.ByteString.Lazy.Char8 as LBC
@@ -16,8 +17,28 @@ import           Utils
 urlPattern :: ByteString
 urlPattern = LB.init [litFile|src/urlPattern.txt|]
 
+scriptPattern :: String
+scriptPattern = init [litFile|src/scriptPattern.txt|]
+
 uriScraper :: Pipe (URI, ByteString) URI IO ()
-uriScraper = uriMatcher >-> uriParser >-> uriCleaner -- >-> tee uriPrinter
+uriScraper =
+    -- contentCleaner >->
+    uriMatcher >->
+    uriParser >->
+    uriCleaner
+
+contentCleaner :: Pipe (URI, ByteString) (URI, ByteString) IO ()
+contentCleaner = forever $ do
+    (uri, content) <- await
+    clean uri content
+  where
+    clean uri content = do
+        let (b1, p1, a1) = content =~ scriptPattern :: (ByteString, ByteString, ByteString)
+        yield (uri, b1)
+        if LB.null a1
+        then return ()
+        else clean uri a1
+
 
 uriMatcher :: Pipe (URI, ByteString) (URI, String) IO ()
 uriMatcher = forever $ do
