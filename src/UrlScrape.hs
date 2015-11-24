@@ -14,6 +14,7 @@ import           Control.Exception          as X
 
 import qualified Pipes.Prelude              as P (print)
 
+import           Monad
 import           TH
 import           Types
 import           Utils
@@ -24,7 +25,7 @@ urlPattern = LB.init [litFile|src/urlPattern.txt|]
 scriptPattern :: String
 scriptPattern = init [litFile|src/scriptPattern.txt|]
 
-uriScraper :: Pipe (URI, ByteString) URI IO ()
+uriScraper :: Pipe (URI, ByteString) URI HESS ()
 uriScraper =
     parser >->
     aFilter >->
@@ -33,31 +34,31 @@ uriScraper =
     uriParser >->
     uriCleaner
 
-parser :: Pipe (URI, ByteString) (URI, Tag ByteString) IO ()
+parser :: Pipe (URI, ByteString) (URI, Tag ByteString) HESS ()
 parser = forever $ do
     (uri, content) <- await
     forM_ (parseTags content) $ \t -> yield (uri, t)
 
-aFilter :: Pipe (URI, Tag ByteString) (URI, Attribute ByteString) IO ()
+aFilter :: Pipe (URI, Tag ByteString) (URI, Attribute ByteString) HESS ()
 aFilter = forever $ do
     (u, t) <- await
     case t of
         TagOpen "a" atts -> forM_ atts $ \a -> yield (u, a)
         _ -> return ()
 
-hrefFilter :: Pipe (URI, Attribute ByteString) (URI, ByteString) IO ()
+hrefFilter :: Pipe (URI, Attribute ByteString) (URI, ByteString) HESS ()
 hrefFilter = forever $ do
     (u, a) <- await
     case a of
         ("href", link) -> yield (u, link)
         _ -> return ()
 
-unpacker :: Pipe (URI, ByteString) (URI, String) IO ()
+unpacker :: Pipe (URI, ByteString) (URI, String) HESS ()
 unpacker = forever $ do
     (u, l) <- await
     yield (u, LBC.unpack l)
 
-uriParser :: Pipe (URI, String) URI IO ()
+uriParser :: Pipe (URI, String) URI HESS ()
 uriParser = forever $ do
     (base, new) <- await
     if isURI new
@@ -77,7 +78,7 @@ tryAbsolute s = parseAbsoluteURI s
 tryAbsoluteWithScheme :: String -> String -> Maybe URI
 tryAbsoluteWithScheme scheme s = parseAbsoluteURI $ scheme ++ "://" ++ s
 
-uriCleaner :: Pipe URI URI IO ()
+uriCleaner :: Pipe URI URI HESS ()
 uriCleaner = forever $ do
     uri <- await
     let clean = uri { uriQuery = [], uriFragment = [] }

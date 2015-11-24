@@ -1,4 +1,5 @@
-# mail-spider
+# HESS
+Haskell E-mail Scraper Spider
 
 ## Goals
 

@@ -5,11 +5,11 @@ import           Data.ByteString       (isPrefixOf)
 import qualified Data.ByteString       as SB (ByteString)
 
 import           Data.ByteString.Lazy  (ByteString)
--- import           Data.Time.Clock       (getCurrentTime)
 import           Data.Time.Clock.POSIX (getPOSIXTime)
 
 import           Control.Exception     as X
 
+import           Monad
 import           Types
 import           Utils
 
@@ -17,7 +17,7 @@ data CrawlerState = CState {
           _visited :: TVar (Set URI)
         , _manager :: Manager
     }
-type Fetcher = StateT CrawlerState IO
+type Fetcher = StateT CrawlerState HESS
 
 makeLenses ''CrawlerState
 

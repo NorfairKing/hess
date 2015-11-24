@@ -1,15 +1,10 @@
 module Parser where
 
-import           Types
+import           Monad
 
 import           Options.Applicative
 
 
-data Args = Args {
-        _nr_fetchers :: Int
-    } deriving (Show, Eq)
-
-makeLenses ''Args
 
 fullParser :: Parser (String, Args)
 fullParser = (,)
