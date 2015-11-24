@@ -74,7 +74,8 @@ prefetcher = requestBuilder >-> prefetchRequester >-> statusCodeFilter >-> heade
 visitedMarker :: Consumer URI Fetcher ()
 visitedMarker = forever $ do
     uri <- await
-    liftIO $ appendFile "/tmp/url.txt" $ (++ "\n") $ show uri
+    f <- view visited_log
+    liftIO $ appendFile f $ (++ "\n") $ show uri
     markVisited uri
 
 requestBuilder :: Pipe URI (URI, Request) Fetcher ()

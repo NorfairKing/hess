@@ -14,7 +14,8 @@ store = appender
 appender :: Consumer ByteString HESS ()
 appender = forever $ do
     bs <- await
-    liftIO $ LB.appendFile "mail.txt" $ LB.concat [bs, "\n"]
+    f <- view mail_store
+    liftIO $ LB.appendFile f $ LB.concat [bs, "\n"]
 
 printer :: Consumer ByteString HESS ()
 printer = forever $ do

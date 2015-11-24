@@ -21,6 +21,18 @@ argParser = Args
         <> long "fetchers"
         <> metavar "INT"
         <> help "The number of fetchers to use concurrently")
+    <*> strOption
+        ( value "mail.txt"
+        <> short 'o'
+        <> long "output"
+        <> metavar "FILE"
+        <> help "Where to output the email addresses")
+    <*> strOption
+        ( value "/tmp/url.txt"
+        <> short 'u'
+        <> long "visited-log"
+        <> metavar "FILE"
+        <> help "Where to log visited URL's")
 
 parseArgs :: IO (String, Args)
 parseArgs = execParser opts
