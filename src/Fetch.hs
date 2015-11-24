@@ -15,8 +15,7 @@ import           Types
 import           Utils
 
 data CrawlerState = CState {
-          _visited :: TVar (Set URI)
-        , _manager :: Manager
+          _manager :: Manager
     }
 type Fetcher = StateT CrawlerState HESS
 
@@ -24,8 +23,6 @@ makeLenses ''CrawlerState
 
 fetcher :: Int -> Pipe URI (URI, ByteString) Fetcher ()
 fetcher nr = tee (statusLight nr) >->
-    visitedFilter >->
-    tee visitedMarker >->
     prefetcher >->
     contentFetcher
 
@@ -46,38 +43,8 @@ statusLight nr = go $ fromInteger 0
 toRequest :: URI -> Maybe Request
 toRequest uri = parseUrl $ show uri
 
-
-isVisited :: URI -> Proxy a' a b' b Fetcher Bool
-isVisited uri = do
-    tvis <- use visited
-    visSet <- liftIO $ atomically $ readTVar tvis
-    return $ member uri visSet
-
-markVisited :: URI -> Proxy a' a b' b Fetcher ()
-markVisited uri = do
-    tvis <- use visited
-    liftIO $ atomically $ do
-        visSet <- readTVar tvis
-        let newSet = insert uri visSet
-        writeTVar tvis newSet
-
-visitedFilter :: Pipe URI URI Fetcher ()
-visitedFilter = forever $ do
-    uri <- await
-    visited <- isVisited uri
-    if visited
-    then return ()
-    else yield uri
-
 prefetcher :: Pipe URI URI Fetcher ()
 prefetcher = requestBuilder >-> prefetchRequester >-> statusCodeFilter >-> headerFilter >-> fstPicker
-
-visitedMarker :: Consumer URI Fetcher ()
-visitedMarker = forever $ do
-    uri <- await
-    f <- view visited_log
-    liftIO $ appendFile f $ (++ "\n") $ show uri
-    markVisited uri
 
 requestBuilder :: Pipe URI (URI, Request) Fetcher ()
 requestBuilder = forever $ do

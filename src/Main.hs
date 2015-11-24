@@ -9,6 +9,7 @@ import           Monad
 import           Parser
 import           Store
 import           Types
+import           UrlProcess
 import           UrlScrape
 
 import           Data.ByteString.Lazy (ByteString)
@@ -23,15 +24,19 @@ spider uri = do
     let startVisited = S.empty
     visitedSet <- liftIO $ newTVarIO startVisited
 
-    let startState = CState {
+    let startCState = CState {
               _manager = man
-            , _visited = visitedSet
+        }
+
+    let startPState = PState {
+              _visited = visitedSet
         }
 
     (uriOut, uriIn)                 <- liftIO $ spawn unbounded
     (contentOut, contentIn)         <- liftIO $ spawn $ bounded 100
     (urlScraperOut, urlScraperIn)   <- liftIO $ spawn $ bounded 100
     (mailScraperOut, mailScraperIn) <- liftIO $ spawn $ bounded 100
+    (urlProcessOut, urlProcessIn)   <- liftIO $ spawn $ unbounded
 
     let duper :: Consumer (URI, ByteString) HESS ()
         duper = forever $ do
@@ -50,7 +55,7 @@ spider uri = do
         $ forM [1..n]
         $ \i -> async $ void
             $ (flip runReaderT) config
-            $ (flip evalStateT) startState
+            $ (flip evalStateT) startCState
                 $ do runEffect $ fromInput uriIn >-> fetcher i >-> toOutput contentOut
                      liftIO performGC
 
@@ -61,14 +66,18 @@ spider uri = do
 
     u <- liftIO
         $ async $ void $ (flip runReaderT) config
-                       $ do runEffect $ fromInput urlScraperIn >-> uriScraper >-> toOutput uriOut
+                       $ do runEffect $ fromInput urlScraperIn >-> uriScraper >-> toOutput urlProcessOut
                             liftIO performGC
     m <- liftIO
         $ async $ void $ (flip runReaderT) config
                        $ do runEffect $ fromInput mailScraperIn >-> mailScraper >-> store
                             liftIO performGC
+    p <- liftIO
+        $ async $ void $ (flip runReaderT) config
+                       $ (flip evalStateT) startPState
+                       $ do runEffect $ fromInput urlProcessIn >-> urlProcess >-> toOutput uriOut
 
-    liftIO $ mapM_ wait (m:s:u:as)
+    liftIO $ mapM_ wait (m:s:u:p:as)
 
 
 main :: IO ()
