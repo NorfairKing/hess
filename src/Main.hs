@@ -41,7 +41,7 @@ spider uri = do
 
     runEffect $ yield uri >-> toOutput uriOut -- Start the process off
 
-    let n = 4
+    n <- view nr_fetchers
 
     config <- ask
 
@@ -69,6 +69,7 @@ spider uri = do
                             liftIO performGC
 
     liftIO $ mapM_ wait (m:s:u:as)
+
 
 main :: IO ()
 main = do

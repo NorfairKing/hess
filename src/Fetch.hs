@@ -22,13 +22,13 @@ type Fetcher = StateT CrawlerState HESS
 makeLenses ''CrawlerState
 
 fetcher :: Int -> Pipe URI (URI, ByteString) Fetcher ()
-fetcher nr = statusLight nr >->
+fetcher nr = tee (statusLight nr) >->
     visitedFilter >->
     tee visitedMarker >->
     prefetcher >->
     contentFetcher
 
-statusLight :: Int -> Pipe URI URI Fetcher ()
+statusLight :: Int -> Consumer URI Fetcher ()
 statusLight nr = go $ fromInteger 0
   where
     go prev = forever $ do
@@ -36,11 +36,9 @@ statusLight nr = go $ fromInteger 0
         now <- liftIO getPOSIXTime
         if prev + 1 < now
         then do
-            liftIO $ appendFile "/tmp/worker.txt" $ show nr ++ "\n"
-            yield u
+            liftIO $ appendFile "/tmp/worker.txt" $ replicate (2 * (nr - 1)) ' ' ++ show nr ++ "\n"
             go now
         else do
-            yield u
             go prev
 
 

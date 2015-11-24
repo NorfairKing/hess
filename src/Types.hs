@@ -25,7 +25,7 @@ module Types (
     ) where
 
 import           Control.Concurrent           (threadDelay)
-import           Control.Concurrent.Async     (async, wait)
+import           Control.Concurrent.Async     (Async (..), async, wait)
 import           Control.Concurrent.STM       (TVar (..), atomically,
                                                modifyTVar', newTVarIO, readTVar,
                                                readTVar, writeTVar)
