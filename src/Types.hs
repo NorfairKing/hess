@@ -26,9 +26,9 @@ module Types (
 
 import           Control.Concurrent           (threadDelay)
 import           Control.Concurrent.Async     (Async (..), async, wait)
-import           Control.Concurrent.STM       (TVar (..), atomically,
-                                               modifyTVar', newTVarIO, readTVar,
-                                               readTVar, writeTVar)
+import           Control.Concurrent.STM       (TVar, atomically, modifyTVar',
+                                               newTVarIO, readTVar, readTVar,
+                                               writeTVar)
 import           Control.Lens                 (makeLenses, use, uses, view,
                                                (%=), (%~), (&), (.=), (.~),
                                                (^.))
@@ -41,9 +41,9 @@ import qualified Data.ByteString              as SB
 import qualified Data.ByteString.Char8        as SBC
 import           Data.List                    (find)
 import           Data.Ord                     (comparing)
-import           Data.Set                     (Set (..), deleteFindMin, insert,
+import           Data.Set                     (Set, deleteFindMin, insert,
                                                member, toList)
-import           Network.HTTP.Client          (HttpException (..), Manager (..),
+import           Network.HTTP.Client          (HttpException (..), Manager,
                                                Request (..), Response (..),
                                                httpLbs, httpNoBody, newManager,
                                                parseUrl, responseBody,
@@ -57,9 +57,9 @@ import           Network.URI                  (URI (..), isRelativeReference,
                                                parseAbsoluteURI,
                                                parseRelativeReference, parseURI,
                                                parseURIReference, relativeTo)
-import           Pipes                        (Consumer (..), Pipe (..),
-                                               Producer (..), Proxy (..), await,
-                                               liftIO, runEffect, yield, (>->))
+import           Pipes                        (Consumer, Pipe, Producer, Proxy,
+                                               await, liftIO, runEffect, yield,
+                                               (>->))
 import           Pipes.Concurrent             (bounded, forkIO, fromInput,
                                                performGC, spawn, toOutput,
                                                unbounded)

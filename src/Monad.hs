@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Monad where
 
 import           Types
