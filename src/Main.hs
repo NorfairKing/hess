@@ -16,9 +16,12 @@ import           Data.ByteString.Lazy (ByteString)
 
 import qualified Data.Set             as S
 
--- We'll have to change fromInput and fromOutput to not just stop when they're done.
-spider :: URI -> HESS ()
-spider uri = do
+main :: IO ()
+main = parseArgs >>= runReaderT spider
+
+spider :: HESS ()
+spider = do
+    uri <- view seed_uri
     man <- liftIO $ newManager tlsManagerSettings
 
     let startVisited = S.empty
@@ -80,10 +83,4 @@ spider uri = do
     liftIO $ mapM_ wait (m:s:u:p:as)
 
 
-main :: IO ()
-main = do
-    (seed, args) <- parseArgs
-    case parseURI seed of
-        Nothing -> error "Invalid seed URI"
-        Just uri -> runReaderT (spider uri) args
 

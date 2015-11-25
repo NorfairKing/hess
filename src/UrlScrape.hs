@@ -22,9 +22,6 @@ import           Utils
 urlPattern :: ByteString
 urlPattern = LB.init [litFile|src/urlPattern.txt|]
 
-scriptPattern :: String
-scriptPattern = init [litFile|src/scriptPattern.txt|]
-
 uriScraper :: Pipe (URI, ByteString) URI HESS ()
 uriScraper =
     parser >->
@@ -70,7 +67,7 @@ uriParser = forever $ do
 tryRelative :: URI -> String -> Maybe URI
 tryRelative uri s = do
     rel <- parseRelativeReference s
-    return $ relativeTo uri rel
+    return $ relativeTo rel uri
 
 tryAbsolute :: String -> Maybe URI
 tryAbsolute s = parseAbsoluteURI s

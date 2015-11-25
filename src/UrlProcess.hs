@@ -1,9 +1,12 @@
+{-# LANGUAGE TemplateHaskell #-}
 module UrlProcess where
 
 import           Monad
 import           Types
 
-import           Pipes (cat)
+import           Data.Maybe (fromJust)
+
+import           Pipes      (cat)
 
 data ProcessorState = PState {
         _onQueue :: TVar (Set URI)
@@ -13,7 +16,12 @@ type Processor = StateT ProcessorState HESS
 makeLenses ''ProcessorState
 
 urlProcess :: Pipe URI URI Processor ()
-urlProcess = onQueueFilter >-> tee onQueueMarker
+urlProcess = do
+    s <- view stay_within_domain
+    let domFilter = if s
+                    then domainFilter
+                    else cat
+    domFilter >-> onQueueFilter >-> tee onQueueMarker
 
 onQueueFilter :: Pipe URI URI Processor ()
 onQueueFilter = forever $ do
@@ -45,3 +53,12 @@ markOnQueue uri = do
         let newSet = insert uri visSet
         writeTVar tvis newSet
 
+domainFilter :: Pipe URI URI Processor ()
+domainFilter = forever $ do
+    seed <- view seed_uri
+    uri <- await
+    -- liftIO $ print uri
+    if uriAuthority seed == uriAuthority uri && dom seed == dom uri
+    then yield uri
+    else return ()
+  where dom = uriRegName . fromJust . uriAuthority

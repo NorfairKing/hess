@@ -52,8 +52,9 @@ import           Network.HTTP.Client.Internal (setUriRelative)
 import           Network.HTTP.Client.TLS      (tlsManagerSettings)
 import           Network.HTTP.Types.Header    (hContentType)
 import           Network.HTTP.Types.Status    (statusCode)
-import           Network.URI                  (URI (..), isRelativeReference,
-                                               isURI, nonStrictRelativeTo,
+import           Network.URI                  (URI (..), URIAuth (..),
+                                               isRelativeReference, isURI,
+                                               nonStrictRelativeTo,
                                                parseAbsoluteURI,
                                                parseRelativeReference, parseURI,
                                                parseURIReference, relativeTo)
