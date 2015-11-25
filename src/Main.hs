@@ -53,7 +53,6 @@ spider = do
 
     config <- ask
 
-    -- Todo make helper functions that help here.
     as <- liftIO
         $ forM [1..n]
         $ \i -> async $ void

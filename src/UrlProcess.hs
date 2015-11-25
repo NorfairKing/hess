@@ -57,7 +57,6 @@ domainFilter :: Pipe URI URI Processor ()
 domainFilter = forever $ do
     seed <- view seed_uri
     uri <- await
-    -- liftIO $ print uri
     if uriAuthority seed == uriAuthority uri && dom seed == dom uri
     then yield uri
     else return ()

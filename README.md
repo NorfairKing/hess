@@ -1,21 +1,24 @@
 # HESS
 Haskell E-mail Scraper Spider
 
-## Goals
+The `hess` program was built to have one purpose: find as many email-addresses as possible in as short a wall-clock time as possible.
 
-The long-term goals of this project is to inform people on how to make sure that their email-address cannot be scraped while still being visible to human users.
+## Extension Suggestions
+### Url Database
 
-In short term:
-- Find as many valid email-addresses in as small a wall-clock time as possible.
-- Add modules for countering different obfuscation methods.
+The Url's that are found on a page are put in a 'queue'.
+No effort has been put into making sure that this queue is emptied in a sensible manner.
 
-
-Wanted arguments:
-- flags for modules to turn on
-- how much resources to use: cores, etc...
+I suggest to store the URL 'queue' in a database and have the fetchers ask for batches of Url's from a controller to this database.
+The controller can then make sure that the same domain isn't crawled too often and maybe even keep track of which domains are better to find email-addresses on.
 
 
-## Design considerations
+### Address verification
 
-The web is huge.
-There is no need to be very precise.
+Some of the strings that show up in the output are definitely not email-addresses (for example: `github-logo@1200x1200.png`) but still conform to the RFC specification.
+
+I suggest to validate email-addresses before outputting them.
+Indications (not proof) of valitidy are:
+- The domain exists and responds to pings
+- The SMTP server affermatively answers a `RCPT` query
+- https://www.webdigi.co.uk/blog/2009/how-to-check-if-an-email-address-exists-without-sending-an-email/
