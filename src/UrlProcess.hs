@@ -35,8 +35,10 @@ onQueueFilter = forever $ do
 onQueueMarker :: Consumer URI Processor ()
 onQueueMarker = forever $ do
     uri <- await
-    f <- view on_queue_log
-    liftIO $ appendFile f $ (++ "\n") $ show uri
+    l <- view on_queue_logging
+    when l $ do
+        f <- view on_queue_log_file
+        liftIO $ appendFile f $ (++ "\n") $ show uri
     markOnQueue uri
 
 isOnQueue :: URI -> Proxy a' a b' b Processor Bool

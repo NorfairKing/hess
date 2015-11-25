@@ -3,6 +3,14 @@ Haskell E-mail Scraper Spider
 
 The `hess` program was built to have one purpose: find as many email-addresses as possible in as short a wall-clock time as possible.
 
+Results:
+```
+$ time hess -f 10 <obfuscated seed> 
+hess -f 10 <obfuscated seed>  3442.59s user 2198.10s system 591% cpu 15:53.34 total
+$ wc -l mail.txt
+356 mail.txt
+```
+
 ## Extension Suggestions
 ### Url Database
 

@@ -31,20 +31,32 @@ argParser = Args
         <> long "fetchers"
         <> metavar "INT"
         <> help "The number of fetchers to use concurrently")
+    <*> flag False True
+        ( short 's'
+        <> long "fetcher-status-log"
+        <> help "Whether to log fetcher's status")
+    <*> strOption
+        ( value "/tmp/fetcher.txt"
+        <> long "queue-log-file"
+        <> metavar "FILE"
+        <> help "Where to log fetcher's status")
     <*> strOption
         ( value "mail.txt"
         <> short 'o'
         <> long "output"
         <> metavar "FILE"
         <> help "Where to output the email addresses")
+    <*> flag False True
+        ( short 'u'
+        <> long "queue-log"
+        <> help "Whether to log queued URL's")
     <*> strOption
         ( value "/tmp/url.txt"
-        <> short 'u'
-        <> long "visited-log"
+        <> long "queue-log-file"
         <> metavar "FILE"
-        <> help "Where to log visited URL's")
+        <> help "Where to log queued URL's")
     <*> switch
-        ( short 's'
+        ( short 'd'
         <> long "stay-within-domain"
         <> help "Stay within the seed URL's domain")
 

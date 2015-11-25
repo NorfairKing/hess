@@ -10,6 +10,7 @@ module Types (
         , module Control.Monad.State
         , module Data.List
         , module Data.Set
+        , module Data.Time.Clock.POSIX
         , module Network.HTTP.Client
         , module Network.HTTP.Client.Internal
         , module Network.HTTP.Client.TLS
@@ -43,6 +44,7 @@ import           Data.List                    (find)
 import           Data.Ord                     (comparing)
 import           Data.Set                     (Set, deleteFindMin, insert,
                                                member, toList)
+import           Data.Time.Clock.POSIX        (POSIXTime (..))
 import           Network.HTTP.Client          (HttpException (..), Manager,
                                                Request (..), Response (..),
                                                httpLbs, httpNoBody, newManager,
@@ -59,8 +61,8 @@ import           Network.URI                  (URI (..), URIAuth (..),
                                                parseRelativeReference, parseURI,
                                                parseURIReference, relativeTo)
 import           Pipes                        (Consumer, Pipe, Producer, Proxy,
-                                               await, liftIO, runEffect, yield,
-                                               (>->))
+                                               await, cat, liftIO, runEffect,
+                                               yield, (>->))
 import           Pipes.Concurrent             (bounded, forkIO, fromInput,
                                                performGC, spawn, toOutput,
                                                unbounded)

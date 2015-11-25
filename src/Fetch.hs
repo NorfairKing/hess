@@ -22,19 +22,24 @@ type Fetcher = StateT CrawlerState HESS
 makeLenses ''CrawlerState
 
 fetcher :: Int -> Pipe URI (URI, ByteString) Fetcher ()
-fetcher nr = tee (statusLight nr) >->
-    prefetcher >->
-    contentFetcher
+fetcher nr = do
+    l <- view fetchers_status_logging
+    let status = if l then tee (statusLight nr) else cat
+    status >->
+        prefetcher >->
+        contentFetcher
 
 statusLight :: Int -> Consumer URI Fetcher ()
 statusLight nr = go $ fromInteger 0
   where
+    go :: POSIXTime -> Consumer URI Fetcher ()
     go prev = forever $ do
+        f <- view fetchers_status_logging_file
         u <- await
         now <- liftIO getPOSIXTime
         if prev + 1 < now
         then do
-            liftIO $ appendFile "/tmp/worker.txt" $ replicate (2 * (nr - 1)) ' ' ++ show nr ++ "\n"
+            liftIO $ appendFile f $ replicate (2 * (nr - 1)) ' ' ++ show nr ++ "\n"
             go now
         else do
             go prev
