@@ -1,0 +1,58 @@
+digraph pipeline {
+  
+  graph [fontsize=10 fontname="Verdana" compound=true];
+  node [shape="rectangle"];
+  // nodesep=0.15;
+  // ranksep=0.50;
+
+  uriBuf  [label="Buffer Url"];
+  uriProcessBuf [label="Buffer (Url, Url)"];
+  contentBuf [label="Buffer (Url, Content)"];
+  urlScraperBuf [label="Buffer (Url, Content)"];
+  mailScraperBuf [label="Buffer (Url, Content)"];
+
+  node [shape="ellipse"];
+  subgraph cluster_fetcher {
+    fetcher1 [label="Fetcher"];
+    fetcher2 [label="Fetcher"];
+    fetcherF [label="Fetcher"];
+
+    label = "Fetchers";
+  }
+  duper [label="Duper"];
+  mailScraper [label="Mail Scraper"];
+  store [label="Store"];
+  urlScraper [label="Url Scraper"];
+  subgraph cluster_queueProcessor {
+    onQueueFilter [label="On-queue Filter"];
+    onQueueMarker [label="On-queue Marker"];
+
+    label = "Queue Processor";
+  }
+
+  node[group="fetchers"];
+  uriBuf -> fetcher1 [lhead="cluster_fetcher"];
+  uriBuf -> fetcher2 [lhead="cluster_fetcher"];
+  uriBuf -> fetcherF [lhead="cluster_fetcher"];
+  fetcher1 -> contentBuf [ltail="cluster_fetcher"];
+  fetcher2 -> contentBuf [ltail="cluster_fetcher"];
+  fetcherF -> contentBuf [ltail="cluster_fetcher"];
+  
+  node[group="duper"];
+  contentBuf -> duper;
+  duper -> urlScraperBuf;
+  duper -> mailScraperBuf;
+  
+  node[group="mailscraper"];
+  mailScraperBuf -> mailScraper -> store;
+
+  node[group="urlscraper"];
+  urlScraperBuf -> urlScraper -> uriProcessBuf;
+
+  node [group="queueprocessor"];
+  uriProcessBuf -> onQueueFilter[lhead="cluster_queueProcessor"];
+  onQueueFilter -> onQueueMarker;
+  onQueueMarker -> uriBuf [ltail="cluster_queueProcessor"];
+
+  rankdir=TB;
+}

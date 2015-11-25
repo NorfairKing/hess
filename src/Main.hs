@@ -22,14 +22,14 @@ spider uri = do
     man <- liftIO $ newManager tlsManagerSettings
 
     let startVisited = S.empty
-    visitedSet <- liftIO $ newTVarIO startVisited
+    onQueueSet <- liftIO $ newTVarIO startVisited
 
     let startCState = CState {
               _manager = man
         }
 
     let startPState = PState {
-              _visited = visitedSet
+              _onQueue = onQueueSet
         }
 
     (uriOut, uriIn)                 <- liftIO $ spawn unbounded
