@@ -3,16 +3,13 @@
 {-# LANGUAGE TemplateHaskell   #-}
 module UrlScrape where
 
-import qualified Data.ByteString            as SB
 import           Data.ByteString.Lazy       (ByteString)
 import qualified Data.ByteString.Lazy       as LB
 import qualified Data.ByteString.Lazy.Char8 as LBC
 
 import           Text.HTML.TagSoup
 
-import           Control.Exception          as X
-
-import qualified Pipes.Prelude              as P (print)
+import qualified Pipes.Prelude              as P (map)
 
 import           Monad
 import           TH
@@ -76,7 +73,4 @@ tryAbsoluteWithScheme :: String -> String -> Maybe URI
 tryAbsoluteWithScheme scheme s = parseAbsoluteURI $ scheme ++ "://" ++ s
 
 uriCleaner :: Pipe URI URI HESS ()
-uriCleaner = forever $ do
-    uri <- await
-    let clean = uri { uriQuery = [], uriFragment = [] }
-    yield clean
+uriCleaner = P.map $ \uri -> uri { uriQuery = [], uriFragment = [] }

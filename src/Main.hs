@@ -21,19 +21,14 @@ main = parseArgs >>= runReaderT spider
 
 spider :: HESS ()
 spider = do
-    uri <- view seed_uri
+    uri <- asks seed_uri
     man <- liftIO $ newManager tlsManagerSettings
 
     let startVisited = S.empty
     onQueueSet <- liftIO $ newTVarIO startVisited
 
-    let startCState = CState {
-              _manager = man
-        }
-
-    let startPState = PState {
-              _onQueue = onQueueSet
-        }
+    let startCState = CState { manager = man }
+    let startPState = PState { onQueue = onQueueSet }
 
     (uriOut, uriIn)                 <- liftIO $ spawn unbounded
     (contentOut, contentIn)         <- liftIO $ spawn $ bounded 100
@@ -49,7 +44,7 @@ spider = do
 
     runEffect $ yield uri >-> toOutput uriOut -- Start the process off
 
-    n <- view nr_fetchers
+    n <- asks nr_fetchers
 
     config <- ask
 

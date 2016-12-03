@@ -3,8 +3,6 @@ module Parser where
 import           Monad
 import           Types
 
-import           Data.Maybe                (fromJust)
-
 import           Options.Applicative
 import           Options.Applicative.Types (ReadM (..), readerAsk, readerError)
 

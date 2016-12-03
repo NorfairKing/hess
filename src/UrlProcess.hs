@@ -8,16 +8,16 @@ import           Data.Maybe (fromJust)
 
 import           Pipes      (cat)
 
-data ProcessorState = PState {
-        _onQueue :: TVar (Set URI)
+newtype ProcessorState
+    = PState
+    { onQueue :: TVar (Set URI)
     }
-type Processor = StateT ProcessorState HESS
 
-makeLenses ''ProcessorState
+type Processor = StateT ProcessorState HESS
 
 urlProcess :: Pipe URI URI Processor ()
 urlProcess = do
-    s <- view stay_within_domain
+    s <- asks stay_within_domain
     let domFilter = if s
                     then domainFilter
                     else cat
@@ -35,21 +35,21 @@ onQueueFilter = forever $ do
 onQueueMarker :: Consumer URI Processor ()
 onQueueMarker = forever $ do
     uri <- await
-    l <- view on_queue_logging
+    l <- asks on_queue_logging
     when l $ do
-        f <- view on_queue_log_file
+        f <- asks on_queue_log_file
         liftIO $ appendFile f $ (++ "\n") $ show uri
     markOnQueue uri
 
 isOnQueue :: URI -> Proxy a' a b' b Processor Bool
 isOnQueue uri = do
-    tvis <- use onQueue
+    tvis <- gets onQueue
     visSet <- liftIO $ atomically $ readTVar tvis
     return $ member uri visSet
 
 markOnQueue :: URI -> Proxy a' a b' b Processor ()
 markOnQueue uri = do
-    tvis <- use onQueue
+    tvis <- gets onQueue
     liftIO $ atomically $ do
         visSet <- readTVar tvis
         let newSet = insert uri visSet
@@ -57,7 +57,7 @@ markOnQueue uri = do
 
 domainFilter :: Pipe URI URI Processor ()
 domainFilter = forever $ do
-    seed <- view seed_uri
+    seed <- asks seed_uri
     uri <- await
     if uriAuthority seed == uriAuthority uri && dom seed == dom uri
     then yield uri

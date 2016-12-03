@@ -14,16 +14,15 @@ import           Monad
 import           Types
 import           Utils
 
-data CrawlerState = CState {
-          _manager :: Manager
+newtype CrawlerState = CState
+    { manager :: Manager
     }
-type Fetcher = StateT CrawlerState HESS
 
-makeLenses ''CrawlerState
+type Fetcher = StateT CrawlerState HESS
 
 fetcher :: Int -> Pipe URI (URI, ByteString) Fetcher ()
 fetcher nr = do
-    l <- view fetchers_status_logging
+    l <- asks fetchers_status_logging
     let status = if l then tee (statusLight nr) else cat
     status >->
         prefetcher >->
@@ -34,8 +33,8 @@ statusLight nr = go $ fromInteger 0
   where
     go :: POSIXTime -> Consumer URI Fetcher ()
     go prev = forever $ do
-        f <- view fetchers_status_logging_file
-        u <- await
+        f <- asks fetchers_status_logging_file
+        void await
         now <- liftIO getPOSIXTime
         if prev + 1 < now
         then do
@@ -46,7 +45,7 @@ statusLight nr = go $ fromInteger 0
 
 
 toRequest :: URI -> Maybe Request
-toRequest uri = parseUrl $ show uri
+toRequest = parseUrlThrow . show
 
 prefetcher :: Pipe URI URI Fetcher ()
 prefetcher = requestBuilder >-> prefetchRequester >-> statusCodeFilter >-> headerFilter >-> fstPicker
@@ -61,7 +60,7 @@ requestBuilder = forever $ do
 prefetchRequester :: Pipe (URI, Request) (URI, Response ()) Fetcher ()
 prefetchRequester = forever $ do
     (uri, req) <- await
-    man <- use manager
+    man <- gets manager
     mresp <- liftIO $ (Just <$> httpNoBody req man) `X.catch` statusExceptionHandler
     case mresp of
         Nothing -> return ()
@@ -101,7 +100,7 @@ contentExtractor = forever $ do
 fetchRequester :: Pipe (URI, Request) (URI, Response ByteString) Fetcher ()
 fetchRequester = forever $ do
     (uri, req) <- await
-    man <- use manager
+    man <- gets manager
     mresp <- liftIO $ (Just <$> httpLbs req man) `X.catch` statusExceptionHandler
     case mresp of
         Nothing -> return ()
@@ -111,6 +110,6 @@ fetchRequester = forever $ do
 
 
 statusExceptionHandler :: HttpException -> IO (Maybe (Response a))
-statusExceptionHandler e = return Nothing -- Ignore all errors
+statusExceptionHandler _ = return Nothing -- Ignore all errors
 
 

@@ -11,6 +11,9 @@ $ wc -l mail.txt
 356 mail.txt
 ```
 
+What you do with the e-mail addresses afterward is not my problem.
+This project was made just for fun.
+
 ## Extension Suggestions
 ### Url Database
 

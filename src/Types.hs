@@ -4,7 +4,6 @@ module Types (
         , module Control.Concurrent
         , module Control.Concurrent.Async
         , module Control.Concurrent.STM
-        , module Control.Lens
         , module Control.Monad
         , module Control.Monad.Reader
         , module Control.Monad.State
@@ -30,12 +29,9 @@ import           Control.Concurrent.Async     (Async (..), async, wait)
 import           Control.Concurrent.STM       (TVar, atomically, modifyTVar',
                                                newTVarIO, readTVar, readTVar,
                                                writeTVar)
-import           Control.Lens                 (makeLenses, use, uses, view,
-                                               (%=), (%~), (&), (.=), (.~),
-                                               (^.))
 import           Control.Monad                (forM, forM_, forever, unless,
                                                void, when)
-import           Control.Monad.Reader         (ReaderT, ask, runReaderT)
+import           Control.Monad.Reader         (ReaderT, ask, asks, runReaderT)
 import           Control.Monad.State          (StateT, evalStateT, get, gets,
                                                modify)
 import qualified Data.ByteString              as SB
@@ -44,11 +40,11 @@ import           Data.List                    (find)
 import           Data.Ord                     (comparing)
 import           Data.Set                     (Set, deleteFindMin, insert,
                                                member, toList)
-import           Data.Time.Clock.POSIX        (POSIXTime (..))
+import           Data.Time.Clock.POSIX        (POSIXTime)
 import           Network.HTTP.Client          (HttpException (..), Manager,
                                                Request (..), Response (..),
                                                httpLbs, httpNoBody, newManager,
-                                               parseUrl, responseBody,
+                                               parseUrlThrow, responseBody,
                                                responseStatus)
 import           Network.HTTP.Client.Internal (setUriRelative)
 import           Network.HTTP.Client.TLS      (tlsManagerSettings)
