@@ -1,25 +1,29 @@
 {-# LANGUAGE OverloadedStrings #-}
+
 module Store where
 
-import           Data.ByteString.Lazy (ByteString)
+import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as LB
 
-import           Monad
-import           Types
+import Monad
+import Types
 
+{-# ANN module ("HLint: ignore Use hierarchical imports" :: String)
+        #-}
 
 store :: Consumer ByteString HESS ()
 store = appender
 
 appender :: Consumer ByteString HESS ()
-appender = forever $ do
-    bs <- await
-    f <- asks mail_store
-    liftIO $ LB.appendFile f $ LB.concat [bs, "\n"]
+appender =
+    forever $ do
+        bs <- await
+        f <- asks mail_store
+        liftIO $ LB.appendFile f $ LB.concat [bs, "\n"]
 
 printer :: Consumer ByteString HESS ()
-printer = forever $ do
-    bs <- await
-    liftIO $ LB.putStr bs
-    liftIO $ LB.putStr "\n"
-
+printer =
+    forever $ do
+        bs <- await
+        liftIO $ LB.putStr bs
+        liftIO $ LB.putStr "\n"
